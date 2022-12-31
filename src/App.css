@@ -3,3 +3,24 @@
   margin: 0 auto;
   padding: 2rem;
 }
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 50px;
+  gap: 20px 20px;
+}
+
+.recipe-card {
+  padding: 15px;
+  background-color: #2563eb;
+  border: 1px solid white;
+  border-radius: 15px;
+}
+
+.recipe-card:hover {
+  transform: translateY(-5px);
+  background-color: #1e40af;
+  transition-duration: 200ms;
+}

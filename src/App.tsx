@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import './App.css'
+import RecipeCard from './components/RecipeCard'
 
 function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [data, setData] = useState(null)
+  const [recipes, setRecipes] = useState([])
+  const [ingredients, setIngredients] = useState("")
 
   const generatePrompt = (ingredients: string) => {
-    return `Propose moi au maximum 5 intitulés de recettes que je peux réaliser avec cette liste d'ingrédients suivante : ${ingredients}.`
+    return `Suggest me 5 names of recipes that I can make with this list of ingredients : ${ingredients}.`
   }
 
-  const fetchOpenAPI = async () => {
+  const showRecipes = recipes.map((name: string, i: number) => {
+    return (<RecipeCard recipeName={name} key={i} />)
+  })
+
+  const fetchOpenAI = async () => {
     setLoading(true)
     fetch("https://api.openai.com/v1/completions", {
       method: "POST",
@@ -20,20 +26,23 @@ function App() {
       },
       body: JSON.stringify(
         {
-          prompt: generatePrompt('3 œufs, lait, farine, sucre, 3 bananes'),
+          prompt: generatePrompt(ingredients),
           max_tokens: 1000,
           model: 'text-davinci-003',
           temperature: 0.6
         }
       )
     }).then(
-      async (response) => setData(await response.json())
+      async (response) => {
+        let d = await response.json()
+        setRecipes((d?.choices[0].text).trim().split('\n'))
+      }
     ).catch(
       (err) => setError(err)
     ).finally(() => setLoading(false))
   }
 
-  if (error) return (<p>A problem occurred while creating the query</p>)
+  if (error) return (<h1>A problem occurred when fetching data</h1>)
 
   return (
     <div className="App">
@@ -42,12 +51,26 @@ function App() {
         little app that allows us to get suggestions for recipe ideas by simply filling in
         the food scraps that are in our fridge.</p>
       <form>
-        <label htmlFor="ingredients">Ingredients</label>
-        <input type="text" id="ingredients" placeholder="3 eggs, milk, flour, sugar, butter..." />
-        <button onClick={fetchOpenAPI} disabled={loading}>Cook the leftovers</button>
+        <label htmlFor="ingredients">Ingredients : </label>
+        <input
+          onChange={(e) => setIngredients(e.target.value)}
+          type="text" id="ingredients"
+          value={ingredients}
+          placeholder="3 eggs, milk, flour, sugar, butter..." />
+        <button
+          onClick={fetchOpenAI}
+          disabled={loading}
+          style={{ display: (ingredients) ? "block" : "none" }}>
+          Cook the leftovers
+        </button>
       </form>
 
-      <p>{(data != null) ? data?.choices[0].text : "No data"}</p>
+      <div style={{ display: (recipes.length > 0) ? "block" : "none" }}>
+        <p>Here are some recipe suggestions, click on any of them to get detailed instructions.</p>
+        <div className="container">
+          {(recipes.length > 0) ? showRecipes : null}
+        </div>
+      </div>
     </div>
   )
 }
