@@ -1,22 +1,16 @@
-import { useState } from 'react'
+import { FormEvent, useState } from 'react'
 import './App.css'
 import RecipeCard from './components/RecipeCard'
+import { recipeInstructions, recipeSuggestions, toList, generateHTML } from './utils'
 
 function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [recipes, setRecipes] = useState([])
+  const [recipes, setRecipes] = useState<string[]>([])
   const [ingredients, setIngredients] = useState("")
+  const [instructions, setInstructions] = useState("")
 
-  const generatePrompt = (ingredients: string) => {
-    return `Suggest me 5 names of recipes that I can make with this list of ingredients : ${ingredients}.`
-  }
-
-  const showRecipes = recipes.map((name: string, i: number) => {
-    return (<RecipeCard recipeName={name} key={i} />)
-  })
-
-  const fetchOpenAI = async () => {
+  const fetchOpenAI = async (prompt: string, getRecipes: boolean = true) => {
     setLoading(true)
     fetch("https://api.openai.com/v1/completions", {
       method: "POST",
@@ -26,8 +20,8 @@ function App() {
       },
       body: JSON.stringify(
         {
-          prompt: generatePrompt(ingredients),
-          max_tokens: 1000,
+          prompt: prompt,
+          max_tokens: 2000,
           model: 'text-davinci-003',
           temperature: 0.6
         }
@@ -35,12 +29,18 @@ function App() {
     }).then(
       async (response) => {
         let d = await response.json()
-        setRecipes((d?.choices[0].text).trim().split('\n'))
+        if (getRecipes) setRecipes(toList(d?.choices[0].text))
+        else setInstructions(d?.choices[0].text)
       }
     ).catch(
       (err) => setError(err)
     ).finally(() => setLoading(false))
   }
+
+  const showRecipes = recipes.map((name: string, i: number) => {
+    return (<RecipeCard recipeName={name} key={i}
+      onPress={() => fetchOpenAI(recipeInstructions(name), false)} />)
+  })
 
   if (error) return (<h1>A problem occurred when fetching data</h1>)
 
@@ -50,7 +50,10 @@ function App() {
       <p>I'm a person who doesn't like food waste, so I came up with the idea of creating a
         little app that allows us to get suggestions for recipe ideas by simply filling in
         the food scraps that are in our fridge.</p>
-      <form>
+      <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault()
+        fetchOpenAI(recipeSuggestions(ingredients))
+      }}>
         <label htmlFor="ingredients">Ingredients : </label>
         <input
           onChange={(e) => setIngredients(e.target.value)}
@@ -58,9 +61,9 @@ function App() {
           value={ingredients}
           placeholder="3 eggs, milk, flour, sugar, butter..." />
         <button
-          onClick={fetchOpenAI}
           disabled={loading}
-          style={{ display: (ingredients) ? "block" : "none" }}>
+          style={{ display: (ingredients) ? "block" : "none" }}
+          type="submit">
           Cook the leftovers
         </button>
       </form>
@@ -70,6 +73,10 @@ function App() {
         <div className="container">
           {(recipes.length > 0) ? showRecipes : null}
         </div>
+      </div>
+
+      <div style={{ display: (instructions) ? "block" : "none" }}>
+        {(instructions) ? generateHTML(instructions) : null}
       </div>
     </div>
   )
