@@ -1,19 +1,30 @@
 import { FormEvent, useState } from 'react'
 import './App.css'
 import RecipeCard from './components/RecipeCard'
+import YouTubeVideoCard from './components/YouTubeVideoCard'
 import HamsterLoader from './components/HamsterLoader'
 import { recipeInstructions, recipeSuggestions, toList, generateHTML } from './utils'
 
 function App() {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({
+    youTubeAPI: null,
+    openAI: null
+  })
   const [recipes, setRecipes] = useState<string[]>([])
   const [ingredients, setIngredients] = useState("")
   const [instructions, setInstructions] = useState("")
+  const [videos, setVideos] = useState([])
 
+  const updateError = (type: keyof typeof errors, error: any) => {
+    setErrors({ ...errors, [type]: error })
+  }
+
+  /* This function allows to fetch OpenAI completions API, to get recipe
+  suggestions or recipe instructions */
   const fetchOpenAI = async (prompt: string, getRecipes: boolean = true) => {
     setLoading(true)
-    setError(null)
+    updateError("openAI", null)
     fetch("https://api.openai.com/v1/completions", {
       method: "POST",
       headers: {
@@ -35,13 +46,46 @@ function App() {
         else setInstructions(d?.choices[0].text)
       }
     ).catch(
-      (err) => setError(err)
+      (err) => updateError("openAI", err)
     ).finally(() => setLoading(false))
   }
 
-  const showRecipes = recipes.map((name: string, i: number) => {
-    return (<RecipeCard recipeName={name} key={i} disabled={loading}
-      onClick={() => fetchOpenAI(recipeInstructions(name), false)} />)
+  /* This function allows to fetch YouTube API, to get videos */
+  const fetchYouTubeAPI = async (query: string) => {
+    updateError("youTubeAPI", null)
+    let KEY = import.meta.env.VITE_YOUTUBE_API_KEY
+    let maxResults = 10
+    fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=${maxResults}&key=${KEY}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      }
+    }).then(
+      async (response) => {
+        let v = await response.json()
+        setVideos(v?.items)
+      }
+    ).catch((err) => updateError("youTubeAPI", err))
+  }
+
+  /* This function is used to retrieve the data
+  sent from the child component (RecipeCard) */
+  const handleChildData = (recipeName: string) => {
+    /* Remove dots and numbers from string */
+    recipeName = recipeName.replace(/[0-9.]/g, "")
+    fetchYouTubeAPI(`How to make ${recipeName}`)
+  }
+
+  const showRecipes = recipes.map((name: string) => {
+    return (<RecipeCard recipeName={name} key={name} disabled={loading}
+      onClick={() => fetchOpenAI(recipeInstructions(name), false)}
+      onDataEmit={handleChildData} />)
+  })
+
+  const showVideos = videos.map((item: object) => {
+    return (<YouTubeVideoCard title={item?.snippet?.title}
+      thumbnailsUrl={item?.snippet?.thumbnails?.medium?.url}
+      key={item?.id?.videoId} videoId={item?.id?.videoId} />)
   })
 
   return (
@@ -68,7 +112,8 @@ function App() {
         </button>
       </form>
 
-      {error && (<h3>A problem occurred when fetching data</h3>)}
+      {errors.openAI && (<h3>An error occurred while fetching data. Please try 
+        again later or contact support if the problem persists.</h3>)}
 
       {loading && <HamsterLoader />}
 
@@ -82,6 +127,15 @@ function App() {
       <div style={{ display: (instructions) ? "block" : "none" }}>
         <h2>Recipe Instructions</h2>
         {(instructions) ? generateHTML(instructions) : null}
+      </div>
+
+      {errors.youTubeAPI && (<h3>An error occurred while fetching Youtube videos. 
+        Please try again later or contact support if the problem persists.</h3>)}
+
+      <div style={{ display: (videos.length > 0) ? "block" : "none" }}>
+        <div className="container">
+          {(videos.length > 0) ? showVideos : null}
+        </div>
       </div>
     </div>
   )
