@@ -3,6 +3,7 @@ import './App.css'
 import RecipeCard from './components/RecipeCard'
 import YouTubeVideoCard from './components/YouTubeVideoCard'
 import HamsterLoader from './components/HamsterLoader'
+import YouTubeVideo from './YouTubeVideo'
 import { recipeInstructions, recipeSuggestions, toList, generateHTML } from './utils'
 
 function App() {
@@ -14,7 +15,7 @@ function App() {
   const [recipes, setRecipes] = useState<string[]>([])
   const [ingredients, setIngredients] = useState("")
   const [instructions, setInstructions] = useState("")
-  const [videos, setVideos] = useState([])
+  const [videos, setVideos] = useState<YouTubeVideo[]>([])
 
   const updateError = (type: keyof typeof errors, error: any) => {
     setErrors({ ...errors, [type]: error })
@@ -62,8 +63,15 @@ function App() {
       }
     }).then(
       async (response) => {
-        let v = await response.json()
-        setVideos(v?.items)
+        let json = await response.json()
+        let videosTemp: YouTubeVideo[] = []
+        for (let obj of json?.items as any[]) {
+          let title = obj.snippet.title
+          let thumbnailsUrl = obj.snippet.thumbnails.medium.url
+          let videoId = obj.id.videoId
+          videosTemp.push(new YouTubeVideo(videoId, thumbnailsUrl, title))
+        }
+        setVideos(videosTemp)
       }
     ).catch((err) => updateError("youTubeAPI", err))
   }
@@ -73,19 +81,17 @@ function App() {
   const handleChildData = (recipeName: string) => {
     /* Remove dots and numbers from string */
     recipeName = recipeName.replace(/[0-9.]/g, "")
+    fetchOpenAI(recipeInstructions(recipeName), false)
     fetchYouTubeAPI(`How to make ${recipeName}`)
   }
 
   const showRecipes = recipes.map((name: string) => {
-    return (<RecipeCard recipeName={name} key={name} disabled={loading}
-      onClick={() => fetchOpenAI(recipeInstructions(name), false)}
-      onDataEmit={handleChildData} />)
+    return (<RecipeCard recipeName={name} key={name}
+      disabled={loading} onDataEmit={handleChildData} />)
   })
 
-  const showVideos = videos.map((item: object) => {
-    return (<YouTubeVideoCard title={item?.snippet?.title}
-      thumbnailsUrl={item?.snippet?.thumbnails?.medium?.url}
-      key={item?.id?.videoId} videoId={item?.id?.videoId} />)
+  const showVideos = videos.map((v: YouTubeVideo) => {
+    return (<YouTubeVideoCard video={v} key={v.videoId} />)
   })
 
   return (
@@ -112,31 +118,45 @@ function App() {
         </button>
       </form>
 
-      {errors.openAI && (<h3>An error occurred while fetching data. Please try 
+      {errors.openAI && (<h3>An error occurred while fetching data. Please try
         again later or contact support if the problem persists.</h3>)}
+
+      {(recipes.length > 0) && (
+        <div>
+          <p>
+            Here are some recipe suggestions, click on any of them to get
+            detailed instructions.
+          </p>
+          <div className="container">
+            {showRecipes}
+          </div>
+        </div>
+      )}
 
       {loading && <HamsterLoader />}
 
-      <div style={{ display: (recipes.length > 0) ? "block" : "none" }}>
-        <p>Here are some recipe suggestions, click on any of them to get detailed instructions.</p>
-        <div className="container">
-          {(recipes.length > 0) ? showRecipes : null}
+      {(instructions && !loading) && (
+        <div>
+          <h3>Recipe Instructions</h3>
+          {generateHTML(instructions)}
         </div>
-      </div>
+      )}
 
-      <div style={{ display: (instructions) ? "block" : "none" }}>
-        <h2>Recipe Instructions</h2>
-        {(instructions) ? generateHTML(instructions) : null}
-      </div>
-
-      {errors.youTubeAPI && (<h3>An error occurred while fetching Youtube videos. 
+      {errors.youTubeAPI && (<h3>An error occurred while fetching Youtube videos.
         Please try again later or contact support if the problem persists.</h3>)}
 
-      <div style={{ display: (videos.length > 0) ? "block" : "none" }}>
-        <div className="container">
-          {(videos.length > 0) ? showVideos : null}
+      {(videos.length > 0 && !loading) && (
+        <div>
+          <h3>YouTube videos</h3>
+          <p>
+            Here are several YouTube video suggestions that are related
+            to the recipe, click on any of them to get video.
+          </p>
+          <div className="container">
+            {showVideos}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
