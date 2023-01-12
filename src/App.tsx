@@ -4,6 +4,7 @@ import RecipeCard from './components/RecipeCard'
 import YouTubeVideoCard from './components/YouTubeVideoCard'
 import HamsterLoader from './components/HamsterLoader'
 import YouTubeVideo from './YouTubeVideo'
+import HowItWorks from './components/HowItWorks'
 import { recipeInstructions, recipeSuggestions, toList, generateHTML } from './utils'
 
 function App() {
@@ -35,7 +36,7 @@ function App() {
       body: JSON.stringify(
         {
           prompt: prompt,
-          max_tokens: 2000,
+          max_tokens: 1000,
           model: 'text-davinci-003',
           temperature: 0.6
         }
@@ -97,9 +98,14 @@ function App() {
   return (
     <div className="App">
       <h1>What are we eating tonight ?</h1>
-      <p>I'm a person who doesn't like food waste, so I came up with the idea of creating a
+      <p>
+        I'm a person who doesn't like food waste, so I came up with the idea of creating a
         little app that allows us to get suggestions for recipe ideas by simply filling in
-        the food scraps that are in our fridge.</p>
+        the food scraps that are in our fridge.
+      </p>
+
+      <HowItWorks />
+
       <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         fetchOpenAI(recipeSuggestions(ingredients))
@@ -121,7 +127,7 @@ function App() {
       {errors.openAI && (<h3>An error occurred while fetching data. Please try
         again later or contact support if the problem persists.</h3>)}
 
-      {(recipes.length > 0) && (
+      {(recipes.length > 0 && !loading) && (
         <div>
           <p>
             Here are some recipe suggestions, click on any of them to get
