@@ -56,7 +56,7 @@ function App() {
   const fetchYouTubeAPI = async (query: string) => {
     updateError("youTubeAPI", null)
     let KEY = import.meta.env.VITE_YOUTUBE_API_KEY
-    let maxResults = 10
+    let maxResults = 12
     fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&type=video&maxResults=${maxResults}&key=${KEY}`, {
       method: "GET",
       headers: {
@@ -88,7 +88,7 @@ function App() {
 
   const showRecipes = recipes.map((name: string) => {
     return (<RecipeCard recipeName={name} key={name}
-      disabled={loading} onDataEmit={handleChildData} />)
+      onDataEmit={handleChildData} />)
   })
 
   const showVideos = videos.map((v: YouTubeVideo) => {

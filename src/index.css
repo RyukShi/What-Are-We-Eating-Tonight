@@ -6,7 +6,8 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-image: url('/wicked-background-dark.svg');
+  background-size: cover;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -58,15 +59,15 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-input {
-  width: 200px;
+#ingredients {
+  width: 33%;
   height: 50px;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-image: url('/wicked-background-light.svg');
   }
   a:hover {
     color: #747bff;
