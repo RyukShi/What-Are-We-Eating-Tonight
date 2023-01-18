@@ -1,11 +1,12 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useContext, useState } from 'react'
 import './App.css'
 import RecipeCard from './components/RecipeCard'
 import YouTubeVideoCard from './components/YouTubeVideoCard'
 import HamsterLoader from './components/HamsterLoader'
 import YouTubeVideo from './YouTubeVideo'
-import HowItWorks from './components/HowItWorks'
+import Introduction from './components/Introduction'
 import { recipeInstructions, recipeSuggestions, toList, generateHTML } from './utils'
+import { LanguageContext } from './contexts/LanguageContext'
 
 function App() {
   const [loading, setLoading] = useState(false)
@@ -17,6 +18,8 @@ function App() {
   const [ingredients, setIngredients] = useState("")
   const [instructions, setInstructions] = useState("")
   const [videos, setVideos] = useState<YouTubeVideo[]>([])
+  const [expertMode, setExpertMode] = useState(false)
+  const { language } = useContext(LanguageContext)
 
   const updateError = (type: keyof typeof errors, error: any) => {
     setErrors({ ...errors, [type]: error })
@@ -82,7 +85,7 @@ function App() {
   const handleChildData = (recipeName: string) => {
     /* Remove dots and numbers from string */
     recipeName = recipeName.replace(/[0-9.]/g, "")
-    fetchOpenAI(recipeInstructions(recipeName), false)
+    fetchOpenAI(recipeInstructions(recipeName, language), false)
     fetchYouTubeAPI(`How to make ${recipeName}`)
   }
 
@@ -97,18 +100,11 @@ function App() {
 
   return (
     <div className="App">
-      <h1>What are we eating tonight ?</h1>
-      <p>
-        I'm a person who doesn't like food waste, so I came up with the idea of creating a
-        little app that allows us to get suggestions for recipe ideas by simply filling in
-        the food scraps that are in our fridge.
-      </p>
-
-      <HowItWorks />
+      <Introduction />
 
       <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        fetchOpenAI(recipeSuggestions(ingredients))
+        fetchOpenAI(recipeSuggestions(ingredients, expertMode, language))
       }}>
         <label htmlFor="ingredients">Ingredients : </label>
         <input
@@ -116,11 +112,16 @@ function App() {
           type="text" id="ingredients"
           value={ingredients}
           placeholder="3 eggs, milk, flour, sugar, butter..." />
+        <label htmlFor="expert-mode">Expert Mode : </label>
+        <input
+          type="checkbox" id="expert-mode"
+          checked={expertMode}
+          onChange={(e) => setExpertMode(e.target.checked)} />
         <button
           disabled={loading}
           style={{ display: (ingredients) ? "block" : "none" }}
           type="submit">
-          Cook the leftovers
+          {(language === 'en') ? "Cook leftovers!" : "Cuisiner les restes!"}
         </button>
       </form>
 
@@ -130,8 +131,13 @@ function App() {
       {(recipes.length > 0 && !loading) && (
         <div>
           <p>
-            Here are some recipe suggestions, click on any of them to get
-            detailed instructions.
+            {
+              (language === 'en') ?
+                `Here are some recipe suggestions, click on any of them to get 
+              detailed instructions.` :
+                `Voici quelques suggestions de recettes, cliquez sur l'une 
+              d'entre elles pour obtenir des instructions détaillées.`
+            }
           </p>
           <div className="container">
             {showRecipes}
@@ -143,7 +149,13 @@ function App() {
 
       {(instructions && !loading) && (
         <div>
-          <h3>Recipe Instructions</h3>
+          <h3>
+            {
+              (language === 'en') ?
+                "Detailed recipe instructions" :
+                "Les instructions détaillées de la recette"
+            }
+          </h3>
           {generateHTML(instructions)}
         </div>
       )}
@@ -153,10 +165,18 @@ function App() {
 
       {(videos.length > 0 && !loading) && (
         <div>
-          <h3>YouTube videos</h3>
+          <h3>
+            {(language === 'en') ? "YouTube videos" : "Les vidéos YouTube"}
+          </h3>
           <p>
-            Here are several YouTube video suggestions that are related
-            to the recipe, click on any of them to get video.
+            {
+              (language === 'en') ?
+                `Here are several YouTube video suggestions that are related 
+              to the recipe, click on any of them to get video.` :
+                `Voici plusieurs suggestions de vidéos YouTube en rapport avec 
+              la recette, cliquez sur l'une d'entre elles pour obtenir la 
+              vidéo.`
+            }
           </p>
           <div className="container">
             {showVideos}
