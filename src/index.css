@@ -48,8 +48,8 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 button:hover {
   border-color: #646cff;
@@ -59,9 +59,14 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-#ingredients {
-  width: 33%;
-  height: 50px;
+input[type="text"], select {
+  padding: 10px 30px;
+  margin-left: 20px;
+}
+
+input[type="checkbox"] {
+  transform: scale(2);
+  margin-left: 20px;
 }
 
 @media (prefers-color-scheme: light) {

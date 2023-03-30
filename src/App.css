@@ -4,12 +4,26 @@
   padding: 2rem;
 }
 
-.container {
+.cook-form {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  row-gap: 20px;
+  align-items: center;
   justify-content: center;
-  margin-top: 50px;
-  gap: 20px 20px;
+  padding: 40px;
+  border: 1.5px solid white;
+  border-radius: 10px;
+  width: 33%;
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.custom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 60px;
+  margin-top: 40px;
+  margin-bottom: 40px;
 }
 
 .recipe-card {
@@ -17,6 +31,7 @@
   background-color: #251a5e;
   cursor: pointer;
   border-radius: 10px;
+  text-align: center;
 }
 
 .recipe-card:hover {
@@ -300,7 +315,6 @@
 }
 
 .yt-card {
-  width: 20%;
   border-radius: 10px;
   cursor: pointer;
   background-color: #251a5e;

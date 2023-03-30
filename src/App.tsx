@@ -102,35 +102,47 @@ function App() {
     <div className="App">
       <Introduction />
 
-      <form onSubmit={(e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        fetchOpenAI(recipeSuggestions(ingredients, expertMode, language))
-      }}>
-        <label htmlFor="ingredients">Ingredients : </label>
-        <input
-          onChange={(e) => setIngredients(e.target.value)}
-          type="text" id="ingredients"
-          value={ingredients}
-          placeholder="3 eggs, milk, flour, sugar, butter..." />
-        <label htmlFor="expert-mode">Expert Mode : </label>
-        <input
-          type="checkbox" id="expert-mode"
-          checked={expertMode}
-          onChange={(e) => setExpertMode(e.target.checked)} />
-        <button
-          disabled={loading}
-          style={{ display: (ingredients) ? "block" : "none" }}
-          type="submit">
-          {(language === 'en') ? "Cook leftovers!" : "Cuisiner les restes!"}
-        </button>
-      </form>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <form className="cook-form" onSubmit={(e: FormEvent<HTMLFormElement>) => {
+          e.preventDefault()
+          fetchOpenAI(recipeSuggestions(ingredients, expertMode, language))
+        }}>
+          <label>Ingredients
+            <input
+              onChange={(e) => setIngredients(e.target.value)}
+              type="text"
+              value={ingredients}
+              placeholder="3 eggs, milk, flour, sugar, butter..." />
+          </label>
+
+          <label>Expert Mode
+            <input
+              type="checkbox"
+              checked={expertMode}
+              onChange={(e) => setExpertMode(e.target.checked)} />
+          </label>
+
+          <p style={{ textAlign: 'center' }}>
+            {(language === 'en') ?
+              "The expert mode is made for experienced chefs, the application will offer more elaborate recipes." :
+              "Le mode expert est destiné aux cuisiniers expérimentés. L'application propose des recettes plus élaborées."}
+          </p>
+
+          <button
+            disabled={loading}
+            style={{ display: (ingredients) ? "block" : "none" }}
+            type="submit">
+            {(language === 'en') ? "Cook leftovers!" : "Cuisiner les restes!"}
+          </button>
+        </form>
+      </div>
 
       {errors.openAI && (<h3>An error occurred while fetching data. Please try
         again later or contact support if the problem persists.</h3>)}
 
       {(recipes.length > 0 && !loading) && (
         <div>
-          <p>
+          <p style={{ textAlign: 'center', fontSize: 20 }}>
             {
               (language === 'en') ?
                 `Here are some recipe suggestions, click on any of them to get 
@@ -139,7 +151,7 @@ function App() {
               d'entre elles pour obtenir des instructions détaillées.`
             }
           </p>
-          <div className="container">
+          <div className="custom-grid">
             {showRecipes}
           </div>
         </div>
@@ -149,13 +161,13 @@ function App() {
 
       {(instructions && !loading) && (
         <div>
-          <h3>
+          <h2>
             {
               (language === 'en') ?
                 "Detailed recipe instructions" :
                 "Les instructions détaillées de la recette"
             }
-          </h3>
+          </h2>
           {generateHTML(instructions)}
         </div>
       )}
@@ -165,9 +177,9 @@ function App() {
 
       {(videos.length > 0 && !loading) && (
         <div>
-          <h3>
+          <h2>
             {(language === 'en') ? "YouTube videos" : "Les vidéos YouTube"}
-          </h3>
+          </h2>
           <p>
             {
               (language === 'en') ?
@@ -178,7 +190,7 @@ function App() {
               vidéo.`
             }
           </p>
-          <div className="container">
+          <div className="custom-grid">
             {showVideos}
           </div>
         </div>
