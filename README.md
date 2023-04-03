@@ -12,26 +12,28 @@ Qu'est-ce qu'on mange ce soir ? C'est une excellente question ! Grâce à cette 
 
 I had the idea of using artificial intelligence to generate recipe suggestions based on ingredients previously entered by the user. This is a big challenge. And thanks to the text completion API created by OpenAI, it allows to generate recipe suggestions perfectly. For the curious, I give you the link to the OpenAI API documentation to better understand how it works ([Text completion API](https://beta.openai.com/docs/guides/completion/text-completion)).
 
-## Run Application
+## Project Setup
 
-Start dev server.  
+### Install Dependencies
 
-```bash
+```sh
+npm i
+```
+
+### Compile and Hot-Reload for Development
+
+```sh
 npm run dev
 ```
 
-## Build Application
+### Compile and Minify for Production
 
-Build application for production.  
-
-```bash
+```sh
 npm run build
 ```
 
-## Preview
+### Locally preview production build.  
 
-Locally preview production build.  
-
-```bash
+```sh
 npm run preview
 ```
